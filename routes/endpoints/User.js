@@ -12,7 +12,7 @@ let routes = (app) => {
         try {
             const { firstname, lastname, middlename, email, password, phone } = req.body;
 
-            if (!firstname || !lastname || !email )
+            if (!firstname || !lastname || !email)
                 return res.status(400).json({ msg: "Please fill in all fields, one or more fileds are empty!" })
 
             if (!validateEmail(email))
@@ -76,22 +76,26 @@ let routes = (app) => {
         const page = parseInt(req.query.limit) / 10 - 1 || 0;
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search || "";
-            try {
-                let counts = await User.find(({ email: { $regex: search, $options: "i" }, role: "user" }))
-                let users = await User.find(({ email: { $regex: search, $options: "i" }, role: "user" })).limit(limit).skip(page).sort({ createdAt: -1 })
-                res.json({ data: { users, pageNumber: Math.round((counts.length / 10) + 0.4) } })
-            }
-            catch (err) {
-                res.status(500).send(err)
-            }
+        const payment = req.query.payment || false;
+        try {
+            let counts = await User.find(({ email: { $regex: search, $options: "i" }, payment:payment, role: "user" }))
+            let users = await User.find(({ email: { $regex: search, $options: "i" }, payment:payment, role: "user" })).limit(limit).skip(page).sort({ createdAt: -1 })
+            res.json({ data: { users, pageNumber: Math.round((counts.length / 10) + 0.4) } })
+        }
+        catch (err) {
+            res.status(500).send(err)
+        }
     });
 
     app.get("/users/dashboard", async (req, res) => {
 
         try {
-            let user = await User.find({role:"user"})
-            let users = await User.find({role:"admin"})
-            res.json({ data: { admin:users.length, user: user.length } })
+            let user = await User.find({ role: "user" })
+            let users = await User.find({ role: "admin" })
+            let pending = await User.find({ payment: false, role: "user" })
+            let paid = await User.find({ payment: true, role: "user" })
+
+            res.json({ data: { admin: users.length, user: user.length, pending: pending.length, paid: paid.length } })
         }
         catch (err) {
             res.status(500).send(err)
@@ -119,6 +123,18 @@ let routes = (app) => {
         try {
             let update = req.body;
             let user = await User.updateOne({ _id: req.params.id }, update, { returnOriginal: false });
+            return res.json(user)
+        }
+        catch (err) {
+            res.status(500).send(err)
+            throw err
+        }
+    });
+
+    app.get('/user/info/:id', async (req, res) => {
+        try {
+            let update = req.body;
+            let user = await User.find({ _id: req.params.id });
             return res.json(user)
         }
         catch (err) {
