@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema({
         type: String
     },
     payment: {
-        type: String
+        type: Boolean, default:false
     },
     NameSponsor: {
         type: String

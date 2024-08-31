@@ -76,19 +76,14 @@ let routes = (app) => {
         const page = parseInt(req.query.limit) / 10 - 1 || 0;
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search || "";
-        const responses = verifyToken({ authToken: req.header('authorization') })
-        if (responses.data.role === "admin") {
             try {
-                let counts = await User.find(({ email: { $regex: search, $options: "i" }, role: "user" })).count()
+                let counts = await User.find(({ email: { $regex: search, $options: "i" }, role: "user" }))
                 let users = await User.find(({ email: { $regex: search, $options: "i" }, role: "user" })).limit(limit).skip(page).sort({ createdAt: -1 })
-                res.json({ data: { users, pageNumber: Math.round((counts / 10) + 0.4) } })
+                res.json({ data: { users, pageNumber: Math.round((counts.length / 10) + 0.4) } })
             }
             catch (err) {
                 res.status(500).send(err)
             }
-        } else {
-            res.status(401).send("you are not authorize to access this feature")
-        }
     });
 
     app.get("/users/dashboard", async (req, res) => {
