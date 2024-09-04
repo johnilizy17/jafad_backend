@@ -32,6 +32,9 @@ const UserSchema = new mongoose.Schema({
     nationality: {
         type: String
     },
+    gender:{
+        type:String
+    },
     photo: {
         type: String
     },
